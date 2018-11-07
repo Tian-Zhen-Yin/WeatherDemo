@@ -1,5 +1,6 @@
 package com.example.administrator.coolweather;
 
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -69,6 +70,7 @@ public class ChooseAreaFragment extends Fragment {
    private int currentLevel;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -111,7 +113,6 @@ public class ChooseAreaFragment extends Fragment {
                         activity.swipeRefresh.setRefreshing(true);
                         activity.requestWeather(weatherId);
                     }
-
                 }
             }
         });

@@ -77,14 +77,11 @@ public class AutoUpdateService extends Service {
                                 editor.putString("weather",responseText);
                                 editor.apply();
 
-
                             }
                         }
 
-
                     });
                 }
-
         }
 
 

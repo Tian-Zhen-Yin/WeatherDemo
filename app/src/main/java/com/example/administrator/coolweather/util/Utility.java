@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import com.example.administrator.coolweather.db.City;
 import com.example.administrator.coolweather.db.County;
 import com.example.administrator.coolweather.db.Province;
+import com.example.administrator.coolweather.gson.AQI;
 import com.example.administrator.coolweather.gson.Weather;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -17,6 +18,8 @@ import org.json.JSONObject;
 import java.util.List;
 
 public class Utility {
+    private static String response;
+
     /**
      * 解析和处理服务器返回的省级数据
      */
@@ -102,8 +105,8 @@ public class Utility {
     @Nullable
     public static Weather handleWeatherResponse(String response) {
         try {
-            // 将整个json实例化保存在jsonObject中
 
+            // 将整个json实例化保存在jsonObject中
             JSONObject jsonObject = new JSONObject(response);
            /* // 从jsonObject中取出键为"HeWeather6"的数据,并保存在数组中
             JSONArray jsonArray = jsonObject.getJSONArray("HeWeather6");
@@ -114,6 +117,32 @@ public class Utility {
             Weather weather=  g.fromJson(jsonObject.toString(),Weather.class);
 
            return weather;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+
+        }
+        return null;
+
+    }
+
+
+    public static AQI handleAQIResponse(String response) {
+
+        try {
+            // 将整个json实例化保存在jsonObject中
+
+            JSONObject jsonObject = new JSONObject(response);
+           /* // 从jsonObject中取出键为"HeWeather6"的数据,并保存在数组中
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather6");
+            // 取出数组中的第一项,并以字符串形式保存
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            // 返回通过Gson解析后的Weather对象*/
+            Gson g=new Gson();
+            AQI aqi=  g.fromJson(jsonObject.toString(),AQI.class);
+
+            return aqi;
 
         } catch (Exception e) {
             e.printStackTrace();

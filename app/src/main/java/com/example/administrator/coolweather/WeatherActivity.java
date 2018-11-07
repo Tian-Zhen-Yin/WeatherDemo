@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.administrator.coolweather.gson.AQI;
 import com.example.administrator.coolweather.gson.Forecast;
 import com.example.administrator.coolweather.gson.Lifestyle;
 import com.example.administrator.coolweather.gson.Weather;
@@ -41,6 +42,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
+import static com.example.administrator.coolweather.util.Utility.handleAQIResponse;
 import static com.example.administrator.coolweather.util.Utility.handleWeatherResponse;
 
 public class WeatherActivity extends AppCompatActivity {
@@ -97,6 +99,7 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeColors(R.color.colorPrimary);
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
+        /*String aqiString=prefs.getString("aqi",null);*/
 
         if(weatherString!=null)
         {
@@ -104,6 +107,7 @@ public class WeatherActivity extends AppCompatActivity {
             Weather weather= (Weather) handleWeatherResponse(weatherString);
             mWeatherId=weather.getHeWeather6().get(0).getBasicX().getCid();
             showWeatherInfo(weather);
+
         }else
         {   //无缓存时,去服务器查询天气
             //String weatherId=getIntent().getStringExtra("weather_id");
@@ -118,7 +122,9 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });
 
-
+        /**
+         * 读取缓存在SharedPreference的pic数据,
+         */
         String bingPic=prefs.getString("bing_pic",null);
         if(bingPic!=null)
         {
@@ -135,7 +141,6 @@ public class WeatherActivity extends AppCompatActivity {
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
-
 
     }
 
@@ -172,6 +177,11 @@ public class WeatherActivity extends AppCompatActivity {
     public void requestWeather(String weatherId)
     {
         final String weatherUrl="https://free-api.heweather.com/s6/weather?location="+weatherId.toString()+"&key=5cfa71f0523045cbbc2a915848c89ad4";
+        final String aqiUrl="https://free-api.heweather.com/s6/air/now?location="+weatherId.toString()+"&key=5cfa71f0523045cbbc2a915848c89ad4";
+
+        /**
+         * 这是对基本天气的访问,但是缺了aqi这一项
+         */
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
 
             @Override
@@ -215,8 +225,62 @@ public class WeatherActivity extends AppCompatActivity {
 
             }
         });
+
+       HttpUtil.sendOkHttpRequest(aqiUrl, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(WeatherActivity.this,"获取天气信息失败onFailure",Toast.LENGTH_LONG).show();
+                        swipeRefresh.setRefreshing(false);
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final String responseText=response.body().string();
+                final AQI aqi=handleAQIResponse(responseText);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if((aqi != null) && "ok".equals(aqi.getHeWeather6().get(0).getStatus()))
+                        {
+                            SharedPreferences.Editor editor=PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+
+                            editor.putString("weather",responseText);
+                            editor.apply();
+                            mWeatherId=aqi.getHeWeather6().get(0).getBasic().getCid();
+                            showAQIInfo(aqi);
+                        }else
+                        {
+                            Toast.makeText(WeatherActivity.this, responseText, Toast.LENGTH_SHORT).show();
+
+                        }
+                        swipeRefresh.setRefreshing(false);
+                    }
+
+                });
+            }
+        });
     }
+
+    private void showAQIInfo(AQI aqi) {
+
+    if(aqi!=null)
+    {
+        aqiText.setText(aqi.getHeWeather6().get(0).getAir_now_city().getAqi());
+        pm25Text.setText(aqi.getHeWeather6().get(0).getAir_now_city().getPm25());
+    }
+
+    }
+
+
     private void showWeatherInfo(Weather weather) {
+
         String cityName=weather.getHeWeather6().get(0).getBasicX().getLocation();
         String updateTime=weather.getHeWeather6().get(0).getUpdate().getLoc();
         String degree=weather.getHeWeather6().get(0).getNowX().getTmp()+"℃";
@@ -241,14 +305,6 @@ public class WeatherActivity extends AppCompatActivity {
         forecastLayout.addView(view);
         }
 
-        if(weather!=null)
-        {
-
-        }
-
-        /*String comfort="舒适度："+weather.lifestyleList.comfort.info;
-        String carWash="洗车指数："+weather.lifestyleList.carWash.info;
-        String sport="运动指数："+weather.lifestyleList.sport.info;*/
 
             comfortText.setText("舒适度："+weather.getHeWeather6().get(0).getLifestyle().get(0).getTxt());
             carWashText.setText("洗车指数："+weather.getHeWeather6().get(0).getLifestyle().get(6).getTxt());
