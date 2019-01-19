@@ -106,6 +106,7 @@ public class WeatherActivity extends AppCompatActivity {
             //有缓存时直接解析天气数据
             Weather weather= (Weather) handleWeatherResponse(weatherString);
             mWeatherId=weather.getHeWeather6().get(0).getBasicX().getCid();
+
             showWeatherInfo(weather);
 
         }else
@@ -134,7 +135,7 @@ public class WeatherActivity extends AppCompatActivity {
         {
             loadBingPic();
         }
-
+//yt
         navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
